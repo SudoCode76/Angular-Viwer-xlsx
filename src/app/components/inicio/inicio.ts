@@ -6,7 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { XlsxDataService } from '../../services/xlsx-data-service';
 import { ProgressSpinner } from 'primeng/progressspinner';
 import { ChartModule } from 'primeng/chart';
-import {DecimalPipe, NgStyle} from '@angular/common';
+import { DecimalPipe, NgStyle } from '@angular/common';
 
 @Component({
   selector: 'app-inicio',
@@ -25,8 +25,8 @@ export class Inicio implements OnInit {
   colX = 0;
   colY = 1;
   columnOptions: { label: string, value: number }[] = [];
-  chartData: any;
-  chartOptions: any;
+  chartData: any = null;
+  chartOptions: any = null;
   correlation: number | null = null;
   regression: { slope: number, intercept: number } | null = null;
 
@@ -40,7 +40,7 @@ export class Inicio implements OnInit {
   constructor(private xlsxService: XlsxDataService) {}
 
   ngOnInit() {
-    this.sheetData = this.xlsxService.getSheetData();
+    this.sheetData = this.xlsxService.getSheetData() || [];
     this.setHeaderColumns();
     this.initColumnOptions();
     this.prepareChart();
@@ -59,7 +59,7 @@ export class Inicio implements OnInit {
       const worksheet = workbook.Sheets[sheetName];
       const json = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false }) as unknown[];
       const parsed = json.map(row => Array.isArray(row) ? row.map(cell => String(cell ?? "")) : []);
-      this.sheetData = parsed;
+      this.sheetData = parsed || [];
       this.setHeaderColumns();
       this.xlsxService.setSheetData(parsed, file.name);
       this.initColumnOptions();
@@ -74,11 +74,13 @@ export class Inicio implements OnInit {
   }
 
   setHeaderColumns() {
-    if (this.sheetData.length > this.headerRowIndex) {
+    if (this.sheetData && this.sheetData.length > this.headerRowIndex) {
       this.headerColumns = (this.sheetData[this.headerRowIndex] ?? []).map((name, idx) => ({
         name: name || `Col ${idx + 1}`,
         value: idx
       }));
+    } else {
+      this.headerColumns = [];
     }
   }
 
@@ -90,7 +92,7 @@ export class Inicio implements OnInit {
   }
 
   initColumnOptions() {
-    const headerRow = this.sheetData[this.headerRowIndex] || [];
+    const headerRow = (this.sheetData && this.sheetData[this.headerRowIndex]) || [];
     this.columnOptions = headerRow.map((name, idx) => ({
       label: name ? String(name) : `Columna ${idx + 1}`,
       value: idx
@@ -105,17 +107,17 @@ export class Inicio implements OnInit {
   }
 
   prepareChart() {
-    if (!this.sheetData.length || this.colX === this.colY) {
+    if (!this.sheetData || !this.sheetData.length || this.colX === this.colY) {
       this.chartData = null;
       this.correlation = null;
       this.regression = null;
       this.estadisticas = [];
       return;
     }
-    // Extrae solo las filas numéricas (omite encabezado y vacías)
     const rows = this.sheetData.filter(
       (row, idx) =>
         idx > this.headerRowIndex &&
+        row &&
         !isNaN(Number(row[this.colX])) &&
         !isNaN(Number(row[this.colY]))
     );
@@ -184,15 +186,14 @@ export class Inicio implements OnInit {
 
   calcularEstadisticas() {
     this.estadisticas = [];
-    if (!this.sheetData.length) return;
+    if (!this.sheetData || !this.sheetData.length) return;
     const header = this.sheetData[this.headerRowIndex] || [];
     const datosNumericos: { nombre: string, valores: number[] }[] = [];
 
-    // Para cada columna, si es numérica, procesa estadísticas
     for (let col = 0; col < header.length; col++) {
       const valores = this.sheetData
         .map((row, idx) =>
-          idx > this.headerRowIndex && !isNaN(Number(row[col])) ? Number(row[col]) : undefined
+          idx > this.headerRowIndex && row && !isNaN(Number(row[col])) ? Number(row[col]) : undefined
         )
         .filter((v) => typeof v === "number") as number[];
       if (valores.length > 0) {
@@ -212,14 +213,13 @@ export class Inicio implements OnInit {
     }));
   }
 
-  // ----- HEATMAP -----
   calcularHeatmapCorrelacion() {
-    const header = this.sheetData[this.headerRowIndex] || [];
+    const header = (this.sheetData && this.sheetData[this.headerRowIndex]) || [];
     const colsNumericas: { idx: number, nombre: string, datos: number[] }[] = [];
     for (let col = 0; col < header.length; col++) {
       const datos = this.sheetData
         .map((row, idx) =>
-          idx > this.headerRowIndex && !isNaN(Number(row[col])) ? Number(row[col]) : undefined
+          idx > this.headerRowIndex && row && !isNaN(Number(row[col])) ? Number(row[col]) : undefined
         )
         .filter((v) => typeof v === "number") as number[];
       if (datos.length > 0) {
@@ -228,13 +228,14 @@ export class Inicio implements OnInit {
     }
     this.heatmapLabels = colsNumericas.map(c => c.nombre);
 
-    // Crea matriz de correlaciones
     this.heatmapMatrix = colsNumericas.map((colA) =>
       colsNumericas.map((colB) => {
         const pares: [number, number][] = [];
-        for (let i = 0; i < this.sheetData.length; i++) {
+        for (let i = 0; i < (this.sheetData?.length || 0); i++) {
           if (
             i > this.headerRowIndex &&
+            this.sheetData &&
+            this.sheetData[i] &&
             !isNaN(Number(this.sheetData[i][colA.idx])) &&
             !isNaN(Number(this.sheetData[i][colB.idx]))
           ) {
@@ -265,7 +266,6 @@ export class Inicio implements OnInit {
     }
   }
 
-  // ----- ESTADÍSTICAS -----
   media(arr: number[]) {
     return arr.reduce((a, b) => a + b, 0) / arr.length;
   }
@@ -309,7 +309,6 @@ export class Inicio implements OnInit {
     }
   }
 
-  // Correlación de Pearson
   getCorrelation(x: number[], y: number[]): number {
     if (!x.length || !y.length) return NaN;
     const n = x.length;
@@ -321,7 +320,6 @@ export class Inicio implements OnInit {
     return (denX && denY) ? num / (denX * denY) : NaN;
   }
 
-  // Regresión lineal (y = slope * x + intercept)
   linearRegression(x: number[], y: number[]) {
     const n = x.length;
     if (n === 0) return { slope: 0, intercept: 0 };

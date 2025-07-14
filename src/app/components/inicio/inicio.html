@@ -1,4 +1,3 @@
-
 @if (loading) {
   <div class="loader-container">
     <p-progress-spinner strokeWidth="6" class="custom-spinner" aria-label="Cargando"></p-progress-spinner>
@@ -15,7 +14,7 @@
   chooseLabel="Seleccionar archivo XLSX">
 </p-fileUpload>
 
-@if (sheetData.length > 0) {
+@if (sheetData && sheetData.length > 0) {
   <p>Vista previa:</p>
   <table class="p-datatable">
     @for (row of sheetData.slice(headerRowIndex, headerRowIndex + 10); let r = $index; track r) {
@@ -37,9 +36,7 @@
     <input type="number" [(ngModel)]="headerRowIndex" min="0" [max]="sheetData.length - 1" (change)="onHeaderRowChange()" />
   </div>
 
-
-  <!-- estadistica descriptiva -->
-  @if (estadisticas.length > 0) {
+  @if (estadisticas && estadisticas.length > 0) {
     <h3>Estadísticas descriptivas</h3>
     <table class="estadisticas-table">
       <tr>
@@ -67,10 +64,6 @@
     </table>
   }
 
-
-
-
-  <!-- Grafica -->
   <div class="selectors">
     <label>
       Eje X:
@@ -90,8 +83,6 @@
     </label>
   </div>
 
-
-
   @if (chartData) {
     <p-chart type="line" [data]="chartData" [options]="chartOptions" class="h-[30rem]" />
   }
@@ -104,9 +95,7 @@
   }
 }
 
-
-<!-- Mapa de calor -->
-@if (heatmapMatrix.length > 0) {
+@if (heatmapMatrix && heatmapMatrix.length > 0) {
   <h3>Mapa de calor de correlación</h3>
   <table class="heatmap-table">
     <tr>
