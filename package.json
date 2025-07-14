@@ -31,6 +31,7 @@
     "@angular/ssr": "^20.1.0",
     "@primeuix/themes": "^1.2.1",
     "express": "^5.1.0",
+    "primeicons": "^7.0.0",
     "primeng": "^20.0.0-rc.1",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",

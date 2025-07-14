@@ -7,6 +7,7 @@ import {XlsxDataService} from '../../services/xlsx-data-service';
 
 // PRIMENG IMPORTS
 import {ProgressSpinner} from 'primeng/progressspinner';
+import {Navbar} from '../navbar/navbar';
 
 
 @Component({
@@ -14,7 +15,7 @@ import {ProgressSpinner} from 'primeng/progressspinner';
   standalone: true,
   templateUrl: './inicio.html',
   styleUrl: './inicio.css',
-  imports: [FileUploadModule, ListboxModule, FormsModule, ProgressSpinner]
+  imports: [FileUploadModule, ListboxModule, FormsModule, ProgressSpinner, Navbar]
 })
 export class Inicio {
   sheetData: string[][] = [];
