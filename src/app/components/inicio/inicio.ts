@@ -249,13 +249,20 @@ export class Inicio implements OnInit {
   }
 
   heatColor(val: number): string {
-    // val entre -1 y 1
-    // Rojo fuerte para -1, blanco para 0, azul fuerte para 1
-    if (isNaN(val)) return '#eee';
-    const r = val < 0 ? 255 : Math.round(255 * (1 - val));
-    const b = val > 0 ? 255 : Math.round(255 * (1 + val));
-    const g = 255 - Math.round(255 * Math.abs(val));
-    return `rgb(${r},${g},${b})`;
+    // Escala pastel: azul pastel para 1, coral pastel para -1, casi blanco para 0
+    if (isNaN(val)) return '#f2f7fa';
+    if (val >= 0) {
+      // De blanco a azul pastel
+      const blue = Math.round(230 - (val * 100));
+      const green = Math.round(245 - (val * 60));
+      return `rgb(${225 - val*30},${green},${blue})`;
+    } else {
+      // De blanco a coral pastel
+      const red = 255;
+      const green = Math.round(230 + val * 50);
+      const blue = Math.round(220 + val * 20);
+      return `rgb(${red},${green},${blue})`;
+    }
   }
 
   // ----- ESTADÍSTICAS -----

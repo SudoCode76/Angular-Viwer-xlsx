@@ -5,8 +5,6 @@ body, .inicio-container {
   margin: 0;
   font-family: 'Segoe UI', Arial, sans-serif;
 }
-
-/* Contenedor principal */
 .inicio-container {
   padding: 1.2rem 1rem 2.2rem 1rem;
   max-width: 700px;
@@ -15,12 +13,10 @@ body, .inicio-container {
   border-radius: 22px;
   box-shadow: 0 4px 30px #b5c9d833;
 }
-
 p-fileUpload {
   display: block;
   margin-bottom: 1.6rem;
 }
-
 .p-datatable,
 .estadisticas-table,
 .heatmap-table {
@@ -35,8 +31,6 @@ p-fileUpload {
   font-size: 0.99rem;
   transition: box-shadow 0.2s;
 }
-
-/* Encabezados */
 .p-datatable th,
 .estadisticas-table th,
 .heatmap-table th {
@@ -47,7 +41,6 @@ p-fileUpload {
   border-bottom: 1px solid #eaeaea;
   padding: 0.75em 0.7em;
 }
-
 .p-datatable td,
 .estadisticas-table td,
 .heatmap-table td {
@@ -58,38 +51,31 @@ p-fileUpload {
   text-align: center;
   font-size: 0.98rem;
 }
-
 .p-datatable tr:nth-child(even),
 .estadisticas-table tr:nth-child(even),
 .heatmap-table tr:nth-child(even) {
   background: #f7fbfa;
 }
-
 .p-datatable tr:hover,
 .estadisticas-table tr:hover,
 .heatmap-table tr:hover {
   background: #e7f6d1;
   transition: background 0.16s;
 }
-
 .p-datatable b {
   color: #8ed6ff;
   font-size: 0.97em;
   margin-left: 0.5em;
 }
-
 .estadisticas-table {
   margin-top: 1.1rem;
   margin-bottom: 1.4rem;
   border-radius: 13px;
 }
-
 .estadisticas-table td {
   font-weight: 500;
   border-radius: 8px;
 }
-
-/* Heatmap pastel */
 .heatmap-table {
   margin-top: 2rem;
   margin-bottom: 2rem;
@@ -123,7 +109,6 @@ p-fileUpload {
   filter: brightness(1);
   color: #49505a;
 }
-
 /* Panel de info */
 .info-panel {
   margin-top: 1.3rem;
@@ -136,7 +121,6 @@ p-fileUpload {
   letter-spacing: 0.01em;
   margin-bottom: 1.3rem;
 }
-
 h3 {
   color: #5bb3a4;
   font-size: 1.08rem;
@@ -145,7 +129,6 @@ h3 {
   margin-top: 1.7rem;
   font-weight: 700;
 }
-
 /* Loader */
 .loader-container {
   display: flex;
@@ -162,14 +145,12 @@ h3 {
   font-size: 1.05rem;
   letter-spacing: 0.04em;
 }
-
 /* Selectores y controles */
 label {
   font-weight: bold;
   color: #5bb3a4;
   font-size: 1.04rem;
 }
-
 input[type="number"], select {
   padding: 0.35em 0.75em;
   border-radius: 8px;
@@ -187,7 +168,6 @@ input[type="number"]:focus, select:focus {
   border: 1.5px solid #a5d8ff;
   box-shadow: 0 0 0 2px #a5d8ff44;
 }
-
 .selectors {
   display: flex;
   gap: 1.1rem;
@@ -195,7 +175,6 @@ input[type="number"]:focus, select:focus {
   flex-wrap: wrap;
   margin-bottom: 1.1rem;
 }
-
 /* RESPONSIVE MOVIL */
 @media (max-width: 700px) {
   .inicio-container {
@@ -231,7 +210,6 @@ input[type="number"]:focus, select:focus {
     font-size: 0.90rem;
   }
 }
-
 /* Scrollbar minimalista */
 ::-webkit-scrollbar {
   width: 9px;
