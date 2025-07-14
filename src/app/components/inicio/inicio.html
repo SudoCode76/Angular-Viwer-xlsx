@@ -1,0 +1,34 @@
+<p-fileUpload
+  name="xlsx"
+  accept=".xlsx"
+  mode="basic"
+  auto="true"
+  (onSelect)="onFileSelect($event)"
+  chooseLabel="Seleccionar archivo XLSX">
+</p-fileUpload>
+
+@if (sheetData.length > 0) {
+  <p>Vista previa:</p>
+  <table class="p-datatable">
+    @for (row of sheetData.slice(0, 10); track row) {
+      <tr>
+        @for (cell of row; track cell) {
+          <td>{{ cell }}</td>
+        }
+        <td>
+          @if (sheetData.indexOf(row) === headerRowIndex) {
+            <b>(Posible encabezado)</b>
+          }
+        </td>
+      </tr>
+    }
+  </table>
+
+
+
+
+  <div>
+    <label>Fila del encabezado:</label>
+    <input type="number" [(ngModel)]="headerRowIndex" min="0" [max]="sheetData.length - 1" (change)="onHeaderRowChange()" />
+  </div>
+}
