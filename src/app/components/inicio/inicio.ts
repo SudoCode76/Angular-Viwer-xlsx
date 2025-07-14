@@ -3,6 +3,10 @@ import * as XLSX from 'xlsx';
 import { FileUploadModule } from 'primeng/fileupload';
 import { ListboxModule } from 'primeng/listbox';
 import {FormsModule} from '@angular/forms';
+import {XlsxDataService} from '../../services/xlsx-data-service';
+
+// PRIMENG IMPORTS
+import {ProgressSpinner} from 'primeng/progressspinner';
 
 
 @Component({
@@ -10,16 +14,20 @@ import {FormsModule} from '@angular/forms';
   standalone: true,
   templateUrl: './inicio.html',
   styleUrl: './inicio.css',
-  imports: [FileUploadModule, ListboxModule, FormsModule]
+  imports: [FileUploadModule, ListboxModule, FormsModule, ProgressSpinner]
 })
 export class Inicio {
-  sheetData: string[][] = []; // Usar siempre array, nunca null
+  sheetData: string[][] = [];
   headerRowIndex = 6;
-  headerColumns: {name: string, value: number}[] = [];
+  headerColumns: { name: string, value: number }[] = [];
+  loading = false;
+
+  constructor(private xlsxService: XlsxDataService) {}
 
   onFileSelect(event: any) {
     const file = event.files?.[0];
     if (!file) return;
+    this.loading = true;
     const reader = new FileReader();
     reader.onload = (e: any) => {
       const data = new Uint8Array(e.target.result);
@@ -27,9 +35,14 @@ export class Inicio {
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       const json = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false }) as unknown[];
-      // Aseguramos tipado como string[][]
-      this.sheetData = json.map(row => Array.isArray(row) ? row.map(cell => String(cell)) : []);
+      const parsed = json.map(row => Array.isArray(row) ? row.map(cell => String(cell ?? "")) : []);
+      this.sheetData = parsed;
       this.setHeaderColumns();
+      this.xlsxService.setSheetData(parsed, file.name);
+      this.loading = false;
+    };
+    reader.onerror = () => {
+      this.loading = false;
     };
     reader.readAsArrayBuffer(file);
   }

@@ -1,3 +1,11 @@
+@if (loading) {
+  <div class="loader-container">
+    <p-progress-spinner strokeWidth="6" styleClass="custom-spinner" aria-label="Cargando"></p-progress-spinner>
+    <span class="loader-label">Cargando archivo...</span>
+  </div>
+}
+
+
 <p-fileUpload
   name="xlsx"
   accept=".xlsx"
@@ -10,13 +18,13 @@
 @if (sheetData.length > 0) {
   <p>Vista previa:</p>
   <table class="p-datatable">
-    @for (row of sheetData.slice(0, 10); track row) {
+    @for (row of sheetData.slice(headerRowIndex, headerRowIndex + 10); let r = $index; track r) {
       <tr>
-        @for (cell of row; track cell) {
+        @for (cell of row; let c = $index; track c) {
           <td>{{ cell }}</td>
         }
         <td>
-          @if (sheetData.indexOf(row) === headerRowIndex) {
+          @if (r === 0) {
             <b>(Posible encabezado)</b>
           }
         </td>

@@ -1,0 +1,116 @@
+body, .inicio-container {
+  background: #181818;
+  color: #f8f8f8;
+  min-height: 100vh;
+  margin: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.inicio-container {
+  padding: 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+p-fileUpload {
+  display: block;
+  margin-bottom: 2rem;
+}
+
+.p-datatable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #232323;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px #000a;
+}
+
+.p-datatable tr {
+  transition: background 0.2s;
+}
+
+.p-datatable tr:nth-child(even) {
+  background: #222;
+}
+
+.p-datatable tr:nth-child(odd) {
+  background: #262829;
+}
+
+.p-datatable td, .p-datatable th {
+  padding: 0.8em 1.2em;
+  border: none;
+  text-align: left;
+  font-size: 1rem;
+}
+
+.p-datatable th {
+  background: #151d28;
+  color: #d0ffef;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.p-datatable td {
+  color: #eafaf6;
+}
+
+.p-datatable tr.header-row, .p-datatable tr:has(b) {
+  background: #1a2e1e !important;
+  font-weight: bold;
+}
+
+.p-datatable b {
+  color: #2fffa5;
+  font-size: 0.97em;
+  margin-left: 0.5em;
+}
+
+label {
+  font-weight: 500;
+  color: #b8ffd4;
+}
+
+input[type="number"] {
+  padding: 0.3em 0.7em;
+  border-radius: 5px;
+  border: 1px solid #444;
+  background: #232323;
+  color: #fff;
+  width: 5em;
+  margin-left: 0.5em;
+}
+
+div {
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 800px) {
+  .inicio-container {
+    padding: 1rem;
+  }
+  .p-datatable td, .p-datatable th {
+    padding: 0.5em 0.5em;
+    font-size: 0.9rem;
+  }
+}
+
+
+.loader-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  margin-bottom: 2rem;
+}
+.loader-label {
+  margin-top: 1.5rem;
+  color: #2fffa5;
+  font-weight: bold;
+  font-size: 1.1rem;
+  letter-spacing: 0.04em;
+}
