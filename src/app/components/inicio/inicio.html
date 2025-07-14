@@ -37,6 +37,40 @@
     <input type="number" [(ngModel)]="headerRowIndex" min="0" [max]="sheetData.length - 1" (change)="onHeaderRowChange()" />
   </div>
 
+
+  <!-- estadistica descriptiva -->
+  @if (estadisticas.length > 0) {
+    <h3>Estadísticas descriptivas</h3>
+    <table class="estadisticas-table">
+      <tr>
+        <th>Columna</th>
+        <th>Media</th>
+        <th>Mediana</th>
+        <th>Moda</th>
+        <th>Rango</th>
+        <th>Desv. Estándar</th>
+        <th>Varianza</th>
+        <th>Rango intercuartílico</th>
+      </tr>
+      @for (e of estadisticas; track e.columna) {
+        <tr>
+          <td>{{ e.columna }}</td>
+          <td>{{ e.media | number:'1.2-2' }}</td>
+          <td>{{ e.mediana | number:'1.2-2' }}</td>
+          <td>{{ e.moda ?? '—' }}</td>
+          <td>{{ e.rango | number:'1.2-2' }}</td>
+          <td>{{ e.desviacion | number:'1.2-2' }}</td>
+          <td>{{ e.varianza | number:'1.2-2' }}</td>
+          <td>{{ e.rangoIntercuartilico | number:'1.2-2' }}</td>
+        </tr>
+      }
+    </table>
+  }
+
+
+
+
+  <!-- Grafica -->
   <div class="selectors">
     <label>
       Eje X:
@@ -56,6 +90,8 @@
     </label>
   </div>
 
+
+
   @if (chartData) {
     <p-chart type="line" [data]="chartData" [options]="chartOptions" class="h-[30rem]" />
   }
@@ -66,4 +102,28 @@
       <p><b>Regresión lineal:</b> y = {{ regression.slope | number:'1.3-3' }} x + {{ regression.intercept | number:'1.3-3' }}</p>
     </div>
   }
+}
+
+
+<!-- Mapa de calor -->
+@if (heatmapMatrix.length > 0) {
+  <h3>Mapa de calor de correlación</h3>
+  <table class="heatmap-table">
+    <tr>
+      <th></th>
+      @for (label of heatmapLabels; track label) {
+        <th>{{ label }}</th>
+      }
+    </tr>
+    @for (row of heatmapMatrix; let rIdx = $index; track rIdx) {
+      <tr>
+        <th>{{ heatmapLabels[rIdx] }}</th>
+        @for (val of row; let cIdx = $index; track cIdx) {
+          <td [ngStyle]="{'background': heatColor(val), color: Math.abs(val) > 0.6 ? '#fff' : '#232323'}">
+            {{ val | number:'1.2-2' }}
+          </td>
+        }
+      </tr>
+    }
+  </table>
 }
