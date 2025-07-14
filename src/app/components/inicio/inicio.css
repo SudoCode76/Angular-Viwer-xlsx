@@ -116,6 +116,31 @@ div {
 }
 
 
-p-fileUpload {
+
+.selectors {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+  align-items: center;
+}
+.selectors label {
+  color: #b8ffd4;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+.selectors select {
+  margin-left: 0.7rem;
+  padding: 0.3em 0.7em;
+  border-radius: 5px;
+  border: 1px solid #444;
+  background: #232323;
+  color: #fff;
+}
+.info-panel {
   margin-top: 2rem;
+  color: #b8ffd4;
+  background: #232323;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
 }
