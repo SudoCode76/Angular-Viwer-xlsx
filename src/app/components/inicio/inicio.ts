@@ -17,7 +17,7 @@ import { DecimalPipe, NgStyle } from '@angular/common';
 })
 export class Inicio implements OnInit {
   sheetData: string[][] = [];
-  headerRowIndex = 6;
+  headerRowIndex = 0; // Asegúrate de que es 0 si el encabezado está en la primera fila de tu XLSX
   headerColumns: { name: string, value: number }[] = [];
   loading = false;
 
@@ -58,6 +58,7 @@ export class Inicio implements OnInit {
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       const json = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false }) as unknown[];
+      // Procesar filas, asegurando que sean arrays de strings
       const parsed = json.map(row => Array.isArray(row) ? row.map(cell => String(cell ?? "")) : []);
       this.sheetData = parsed || [];
       this.setHeaderColumns();
@@ -114,15 +115,16 @@ export class Inicio implements OnInit {
       this.estadisticas = [];
       return;
     }
+    // Usar replace(',', '.') para convertir decimales con coma a punto
     const rows = this.sheetData.filter(
       (row, idx) =>
         idx > this.headerRowIndex &&
         row &&
-        !isNaN(Number(row[this.colX])) &&
-        !isNaN(Number(row[this.colY]))
+        !isNaN(Number(String(row[this.colX]).replace(',', '.'))) &&
+        !isNaN(Number(String(row[this.colY]).replace(',', '.')))
     );
-    const x = rows.map(row => Number(row[this.colX]));
-    const y = rows.map(row => Number(row[this.colY]));
+    const x = rows.map(row => Number(String(row[this.colX]).replace(',', '.')));
+    const y = rows.map(row => Number(String(row[this.colY]).replace(',', '.')));
 
     if (!x.length || !y.length) {
       this.chartData = null;
@@ -138,46 +140,62 @@ export class Inicio implements OnInit {
     const yReg = x.map(xi => slope * xi + intercept);
 
     this.chartData = {
-      labels: x,
       datasets: [
         {
           label: 'Datos',
-          data: y,
-          borderColor: '#2fffa5',
-          backgroundColor: '#2fffa588',
-          type: 'scatter',
+          data: x.map((xi, i) => ({ x: xi, y: y[i] })),
+          borderColor: '#47c0ff',
+          backgroundColor: '#47c0ff',
+          pointBackgroundColor: '#47c0ff',
           showLine: false,
-          pointRadius: 5
+          type: 'scatter',
+          pointRadius: 6,
+          pointHoverRadius: 7,
+          order: 2
         },
         {
           label: 'Regresión Lineal',
-          data: yReg,
-          borderColor: '#ff3c7e',
-          backgroundColor: '#ff3c7e55',
-          type: 'line',
+          data: x.map((xi, i) => ({ x: xi, y: yReg[i] })),
+          borderColor: '#ff3c3c',
+          backgroundColor: 'rgba(255,60,60,0.3)',
           fill: false,
+          type: 'line',
           pointRadius: 0,
-          tension: 0
+          borderWidth: 2,
+          tension: 0,
+          order: 1
         }
       ]
     };
 
     this.chartOptions = {
-      scales: {
-        x: {
-          title: { display: true, text: this.columnOptions[this.colX]?.label ?? 'Columna X' }
-        },
-        y: {
-          title: { display: true, text: this.columnOptions[this.colY]?.label ?? 'Columna Y' }
-        }
-      },
       plugins: {
-        legend: { labels: { color: '#fff' } },
+        legend: {
+          labels: { color: '#fff' }
+        },
         title: {
           display: true,
-          text: 'Correlación y Regresión Lineal'
+          text: 'Correlación y Regresión Lineal',
+          color: '#fff',
+          font: { size: 18 }
         }
-      }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: this.columnOptions[this.colX]?.label ?? 'Columna X', color: '#fff', font: { size: 15 } },
+          ticks: { color: '#e3e3e3' },
+          grid: { color: '#333' }
+        },
+        y: {
+          title: { display: true, text: this.columnOptions[this.colY]?.label ?? 'Columna Y', color: '#fff', font: { size: 15 } },
+          ticks: { color: '#e3e3e3' },
+          grid: { color: '#333' }
+        }
+      },
+      layout: {
+        padding: 24
+      },
+      backgroundColor: '#18191a'
     };
 
     this.calcularEstadisticas();
@@ -193,7 +211,11 @@ export class Inicio implements OnInit {
     for (let col = 0; col < header.length; col++) {
       const valores = this.sheetData
         .map((row, idx) =>
-          idx > this.headerRowIndex && row && !isNaN(Number(row[col])) ? Number(row[col]) : undefined
+          idx > this.headerRowIndex &&
+          row &&
+          !isNaN(Number(String(row[col]).replace(',', '.')))
+            ? Number(String(row[col]).replace(',', '.'))
+            : undefined
         )
         .filter((v) => typeof v === "number") as number[];
       if (valores.length > 0) {
@@ -219,7 +241,11 @@ export class Inicio implements OnInit {
     for (let col = 0; col < header.length; col++) {
       const datos = this.sheetData
         .map((row, idx) =>
-          idx > this.headerRowIndex && row && !isNaN(Number(row[col])) ? Number(row[col]) : undefined
+          idx > this.headerRowIndex &&
+          row &&
+          !isNaN(Number(String(row[col]).replace(',', '.')))
+            ? Number(String(row[col]).replace(',', '.'))
+            : undefined
         )
         .filter((v) => typeof v === "number") as number[];
       if (datos.length > 0) {
@@ -236,10 +262,13 @@ export class Inicio implements OnInit {
             i > this.headerRowIndex &&
             this.sheetData &&
             this.sheetData[i] &&
-            !isNaN(Number(this.sheetData[i][colA.idx])) &&
-            !isNaN(Number(this.sheetData[i][colB.idx]))
+            !isNaN(Number(String(this.sheetData[i][colA.idx]).replace(',', '.'))) &&
+            !isNaN(Number(String(this.sheetData[i][colB.idx]).replace(',', '.')))
           ) {
-            pares.push([Number(this.sheetData[i][colA.idx]), Number(this.sheetData[i][colB.idx])]);
+            pares.push([
+              Number(String(this.sheetData[i][colA.idx]).replace(',', '.')),
+              Number(String(this.sheetData[i][colB.idx]).replace(',', '.'))
+            ]);
           }
         }
         const x = pares.map(p => p[0]);

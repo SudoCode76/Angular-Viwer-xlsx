@@ -13,7 +13,7 @@ body, .inicio-container {
   border-radius: 22px;
   box-shadow: 0 4px 30px #b5c9d833;
 }
-p-fileUpload {
+.p-fileupload {
   display: block;
   margin-bottom: 1.6rem;
 }
@@ -121,13 +121,32 @@ p-fileUpload {
   letter-spacing: 0.01em;
   margin-bottom: 1.3rem;
 }
-h3 {
-  color: #5bb3a4;
-  font-size: 1.08rem;
-  letter-spacing: 0.01em;
-  margin-bottom: 1.1rem;
-  margin-top: 1.7rem;
-  font-weight: 700;
+
+/* --- GRÁFICA DARK --- */
+.chart-dark-container {
+  background: #18191a;
+  border-radius: 1.3rem;
+  padding: 2.2rem 2.2rem 1.85rem 2.2rem;
+  margin-bottom: 1.3em;
+  margin-top: 1.2em;
+  box-shadow: 0 2px 24px #181a1c77;
+}
+.dark-chart {
+  background: #18191a !important;
+  border-radius: 16px !important;
+  padding: 1.5rem;
+}
+.corr-info-panel {
+  color: #fff;
+  margin-top: 1.25em;
+  font-size: 1.14em;
+  text-align: left;
+  background: #22242a;
+  border-radius: 0.65em;
+  padding: 0.8em 1.2em;
+  box-shadow: 0 2px 14px #20202444;
+  font-family: 'Fira Mono', 'Consolas', monospace;
+  letter-spacing: 0.02em;
 }
 /* Loader */
 .loader-container {
@@ -209,8 +228,10 @@ input[type="number"]:focus, select:focus {
     padding: 0.6rem 0.7rem;
     font-size: 0.90rem;
   }
+  .chart-dark-container {
+    padding: 1.1rem 0.4rem 1.1rem 0.4rem;
+  }
 }
-/* Scrollbar minimalista */
 ::-webkit-scrollbar {
   width: 9px;
   background: #eaf6fb;
