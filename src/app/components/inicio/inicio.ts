@@ -21,7 +21,6 @@ export class Inicio implements OnInit {
   headerColumns: { name: string, value: number }[] = [];
   loading = false;
 
-  // Para gráfica y análisis
   colX = 0;
   colY = 1;
   columnOptions: { label: string, value: number }[] = [];
@@ -30,12 +29,16 @@ export class Inicio implements OnInit {
   correlation: number | null = null;
   regression: { slope: number, intercept: number } | null = null;
 
-  // Estadísticas descriptivas
   estadisticas: any[] = [];
-
-  // Mapa de calor
   heatmapLabels: string[] = [];
   heatmapMatrix: number[][] = [];
+
+  // Regresión múltiple
+  yMultivar: number | null = null;
+  xMultivarSeleccionadas: number[] = [];
+  multiRegressionChartData: any = null;
+  multiRegressionChartOptions: any = null;
+  multiRegressionCoef: { intercept: number, coefs: number[] } | null = null;
 
   constructor(private xlsxService: XlsxDataService) {}
 
@@ -45,6 +48,9 @@ export class Inicio implements OnInit {
     this.initColumnOptions();
     this.prepareChart();
     this.calcularHeatmapCorrelacion();
+    this.yMultivar = this.columnOptions.length > 0 ? this.columnOptions[0].value : null;
+    this.xMultivarSeleccionadas = this.columnOptions.length > 2 ? [this.columnOptions[1].value, this.columnOptions[2].value] : [];
+    this.prepararGraficoRegresionMultiple();
   }
 
   onFileSelect(event: any) {
@@ -66,6 +72,9 @@ export class Inicio implements OnInit {
       this.initColumnOptions();
       this.prepareChart();
       this.calcularHeatmapCorrelacion();
+      this.yMultivar = this.columnOptions.length > 0 ? this.columnOptions[0].value : null;
+      this.xMultivarSeleccionadas = this.columnOptions.length > 2 ? [this.columnOptions[1].value, this.columnOptions[2].value] : [];
+      this.prepararGraficoRegresionMultiple();
       this.loading = false;
     };
     reader.onerror = () => {
@@ -90,6 +99,9 @@ export class Inicio implements OnInit {
     this.initColumnOptions();
     this.prepareChart();
     this.calcularHeatmapCorrelacion();
+    this.yMultivar = this.columnOptions.length > 0 ? this.columnOptions[0].value : null;
+    this.xMultivarSeleccionadas = this.columnOptions.length > 2 ? [this.columnOptions[1].value, this.columnOptions[2].value] : [];
+    this.prepararGraficoRegresionMultiple();
   }
 
   initColumnOptions() {
@@ -207,7 +219,6 @@ export class Inicio implements OnInit {
     if (!this.sheetData || !this.sheetData.length) return;
     const header = this.sheetData[this.headerRowIndex] || [];
     const datosNumericos: { nombre: string, valores: number[] }[] = [];
-
     for (let col = 0; col < header.length; col++) {
       const valores = this.sheetData
         .map((row, idx) =>
@@ -222,7 +233,6 @@ export class Inicio implements OnInit {
         datosNumericos.push({ nombre: header[col] || `Columna ${col + 1}`, valores });
       }
     }
-
     this.estadisticas = datosNumericos.map((col) => ({
       columna: col.nombre,
       media: this.media(col.valores),
@@ -253,7 +263,6 @@ export class Inicio implements OnInit {
       }
     }
     this.heatmapLabels = colsNumericas.map(c => c.nombre);
-
     this.heatmapMatrix = colsNumericas.map((colA) =>
       colsNumericas.map((colB) => {
         const pares: [number, number][] = [];
@@ -279,15 +288,12 @@ export class Inicio implements OnInit {
   }
 
   heatColor(val: number): string {
-    // Escala pastel: azul pastel para 1, coral pastel para -1, casi blanco para 0
     if (isNaN(val)) return '#f2f7fa';
     if (val >= 0) {
-      // De blanco a azul pastel
       const blue = Math.round(230 - (val * 100));
       const green = Math.round(245 - (val * 60));
       return `rgb(${225 - val*30},${green},${blue})`;
     } else {
-      // De blanco a coral pastel
       const red = 255;
       const green = Math.round(230 + val * 50);
       const blue = Math.round(220 + val * 20);
@@ -359,6 +365,144 @@ export class Inicio implements OnInit {
     const slope = num / den;
     const intercept = meanY - slope * meanX;
     return { slope, intercept };
+  }
+
+  // --- Regresión múltiple ---
+  onYMultivarChange() {
+    this.prepararGraficoRegresionMultiple();
+  }
+  onXMultivarSeleccionadasChange() {
+    this.prepararGraficoRegresionMultiple();
+  }
+
+  prepararGraficoRegresionMultiple() {
+    if (
+      !this.sheetData ||
+      !this.sheetData.length ||
+      this.yMultivar === null ||
+      this.xMultivarSeleccionadas.length === 0
+    ) {
+      this.multiRegressionChartData = null;
+      this.multiRegressionCoef = null;
+      return;
+    }
+
+    const rows = this.sheetData.filter((row, idx) => idx > this.headerRowIndex);
+    // Filtra filas con todos los X y Y numéricos
+    const validRows = rows.filter(row =>
+      this.yMultivar !== null &&
+      !isNaN(Number(row[this.yMultivar])) &&
+      this.xMultivarSeleccionadas.every(idx => !isNaN(Number(row[idx])))
+    );
+    if (validRows.length === 0) {
+      this.multiRegressionChartData = null;
+      this.multiRegressionCoef = null;
+      return;
+    }
+
+    // Matriz X, columna extra de 1 para el intercepto
+    const X = validRows.map(row => [1, ...this.xMultivarSeleccionadas.map(idx => Number(row[idx]))]);
+    // Vector Y
+    const Y = validRows.map(row => Number(row[this.yMultivar!]));
+
+    // Calcular coeficientes por mínimos cuadrados: beta = (X^T X)^(-1) X^T Y
+    const XT = this.transpose(X);
+    const XTX = this.multiplyMatrices(XT, X);
+    const XTX_inv = this.invertMatrix(XTX);
+    if (!XTX_inv) {
+      this.multiRegressionChartData = null;
+      this.multiRegressionCoef = null;
+      return;
+    }
+    const XTY = this.multiplyMatrixVector(XT, Y);
+    const beta = this.multiplyMatrixVector(XTX_inv, XTY); // [intercept, coef_x1, coef_x2, ...]
+    const intercept = beta[0];
+    const coefs = beta.slice(1);
+
+    // Y predicho
+    const Y_predicho = X.map(row => beta.reduce((acc, b, i) => acc + b * row[i], 0));
+
+    this.multiRegressionCoef = { intercept, coefs };
+
+    // Chart.js
+    this.multiRegressionChartData = {
+      labels: validRows.map((_, i) => `Fila ${i + 1}`),
+      datasets: [
+        {
+          label: "Y real (" + (this.columnOptions[this.yMultivar]?.label ?? "Y") + ")",
+          data: Y,
+          borderColor: "#2fffa5",
+          backgroundColor: "#2fffa588",
+          fill: false,
+          pointRadius: 3,
+          tension: 0.1
+        },
+        {
+          label: "Y predicho (Regresión múltiple)",
+          data: Y_predicho,
+          borderColor: "#ff3c7e",
+          backgroundColor: "#ff3c7e55",
+          fill: false,
+          pointRadius: 3,
+          tension: 0.1
+        }
+      ]
+    };
+
+    this.multiRegressionChartOptions = {
+      plugins: {
+        legend: { labels: { color: "#3a3a3a" } },
+        title: { display: true, text: "Regresión lineal múltiple: Y vs X's seleccionadas" }
+      },
+      scales: {
+        x: { title: { display: true, text: "Fila" }, ticks: { color: "#3a3a3a" } },
+        y: { title: { display: true, text: "Valor" }, ticks: { color: "#3a3a3a" } }
+      }
+    };
+  }
+
+  transpose(A: number[][]): number[][] {
+    return A[0].map((_, colIndex) => A.map(row => row[colIndex]));
+  }
+  multiplyMatrices(A: number[][], B: number[][]): number[][] {
+    const result: number[][] = Array(A.length)
+      .fill(0)
+      .map(() => Array(B[0].length).fill(0));
+    for (let i = 0; i < A.length; i++)
+      for (let j = 0; j < B[0].length; j++)
+        for (let k = 0; k < B.length; k++)
+          result[i][j] += A[i][k] * B[k][j];
+    return result;
+  }
+  multiplyMatrixVector(A: number[][], v: number[]): number[] {
+    return A.map(row => row.reduce((sum, val, i) => sum + val * v[i], 0));
+  }
+  invertMatrix(matrix: number[][]): number[][] | null {
+    const n = matrix.length;
+    const M = matrix.map(row => [...row]);
+    const I = Array(n)
+      .fill(0)
+      .map((_, i) => Array(n).fill(0));
+    for (let i = 0; i < n; i++) I[i][i] = 1;
+    for (let i = 0; i < n; i++) {
+      let maxRow = i;
+      for (let k = i + 1; k < n; k++)
+        if (Math.abs(M[k][i]) > Math.abs(M[maxRow][i])) maxRow = k;
+      [M[i], M[maxRow]] = [M[maxRow], M[i]];
+      [I[i], I[maxRow]] = [I[maxRow], I[i]];
+      if (Math.abs(M[i][i]) < 1e-12) return null;
+      const f = M[i][i];
+      for (let j = 0; j < n; j++) M[i][j] /= f;
+      for (let j = 0; j < n; j++) I[i][j] /= f;
+      for (let k = 0; k < n; k++) {
+        if (k !== i) {
+          const f2 = M[k][i];
+          for (let j = 0; j < n; j++) M[k][j] -= f2 * M[i][j];
+          for (let j = 0; j < n; j++) I[k][j] -= f2 * I[i][j];
+        }
+      }
+    }
+    return I;
   }
 
   protected readonly Math = Math;
