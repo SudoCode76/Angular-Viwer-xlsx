@@ -17,7 +17,7 @@ import { DecimalPipe, NgStyle } from '@angular/common';
 })
 export class Inicio implements OnInit {
   sheetData: string[][] = [];
-  headerRowIndex = 0; // Asegúrate de que es 0 si el encabezado está en la primera fila de tu XLSX
+  headerRowIndex = 6;
   headerColumns: { name: string, value: number }[] = [];
   loading = false;
 
@@ -64,7 +64,6 @@ export class Inicio implements OnInit {
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       const json = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false }) as unknown[];
-      // Procesar filas, asegurando que sean arrays de strings
       const parsed = json.map(row => Array.isArray(row) ? row.map(cell => String(cell ?? "")) : []);
       this.sheetData = parsed || [];
       this.setHeaderColumns();
@@ -127,16 +126,15 @@ export class Inicio implements OnInit {
       this.estadisticas = [];
       return;
     }
-    // Usar replace(',', '.') para convertir decimales con coma a punto
     const rows = this.sheetData.filter(
       (row, idx) =>
         idx > this.headerRowIndex &&
         row &&
-        !isNaN(Number(String(row[this.colX]).replace(',', '.'))) &&
-        !isNaN(Number(String(row[this.colY]).replace(',', '.')))
+        !isNaN(Number(row[this.colX])) &&
+        !isNaN(Number(row[this.colY]))
     );
-    const x = rows.map(row => Number(String(row[this.colX]).replace(',', '.')));
-    const y = rows.map(row => Number(String(row[this.colY]).replace(',', '.')));
+    const x = rows.map(row => Number(row[this.colX]));
+    const y = rows.map(row => Number(row[this.colY]));
 
     if (!x.length || !y.length) {
       this.chartData = null;
@@ -152,62 +150,46 @@ export class Inicio implements OnInit {
     const yReg = x.map(xi => slope * xi + intercept);
 
     this.chartData = {
+      labels: x,
       datasets: [
         {
           label: 'Datos',
-          data: x.map((xi, i) => ({ x: xi, y: y[i] })),
-          borderColor: '#47c0ff',
-          backgroundColor: '#47c0ff',
-          pointBackgroundColor: '#47c0ff',
-          showLine: false,
+          data: y,
+          borderColor: '#2fffa5',
+          backgroundColor: '#2fffa588',
           type: 'scatter',
-          pointRadius: 6,
-          pointHoverRadius: 7,
-          order: 2
+          showLine: false,
+          pointRadius: 5
         },
         {
           label: 'Regresión Lineal',
-          data: x.map((xi, i) => ({ x: xi, y: yReg[i] })),
-          borderColor: '#ff3c3c',
-          backgroundColor: 'rgba(255,60,60,0.3)',
-          fill: false,
+          data: yReg,
+          borderColor: '#ff3c7e',
+          backgroundColor: '#ff3c7e55',
           type: 'line',
+          fill: false,
           pointRadius: 0,
-          borderWidth: 2,
-          tension: 0,
-          order: 1
+          tension: 0
         }
       ]
     };
 
     this.chartOptions = {
-      plugins: {
-        legend: {
-          labels: { color: '#fff' }
-        },
-        title: {
-          display: true,
-          text: 'Correlación y Regresión Lineal',
-          color: '#fff',
-          font: { size: 18 }
-        }
-      },
       scales: {
         x: {
-          title: { display: true, text: this.columnOptions[this.colX]?.label ?? 'Columna X', color: '#fff', font: { size: 15 } },
-          ticks: { color: '#e3e3e3' },
-          grid: { color: '#333' }
+          title: { display: true, text: this.columnOptions[this.colX]?.label ?? 'Columna X' }
         },
         y: {
-          title: { display: true, text: this.columnOptions[this.colY]?.label ?? 'Columna Y', color: '#fff', font: { size: 15 } },
-          ticks: { color: '#e3e3e3' },
-          grid: { color: '#333' }
+          title: { display: true, text: this.columnOptions[this.colY]?.label ?? 'Columna Y' }
         }
       },
-      layout: {
-        padding: 24
-      },
-      backgroundColor: '#18191a'
+      plugins: {
+        legend: { labels: { color: '#fff' } },
+        title: {
+          display: true,
+          text: 'Correlación y Regresión Lineal'
+        }
+      }
     };
 
     this.calcularEstadisticas();
@@ -222,11 +204,7 @@ export class Inicio implements OnInit {
     for (let col = 0; col < header.length; col++) {
       const valores = this.sheetData
         .map((row, idx) =>
-          idx > this.headerRowIndex &&
-          row &&
-          !isNaN(Number(String(row[col]).replace(',', '.')))
-            ? Number(String(row[col]).replace(',', '.'))
-            : undefined
+          idx > this.headerRowIndex && row && !isNaN(Number(row[col])) ? Number(row[col]) : undefined
         )
         .filter((v) => typeof v === "number") as number[];
       if (valores.length > 0) {
@@ -251,11 +229,7 @@ export class Inicio implements OnInit {
     for (let col = 0; col < header.length; col++) {
       const datos = this.sheetData
         .map((row, idx) =>
-          idx > this.headerRowIndex &&
-          row &&
-          !isNaN(Number(String(row[col]).replace(',', '.')))
-            ? Number(String(row[col]).replace(',', '.'))
-            : undefined
+          idx > this.headerRowIndex && row && !isNaN(Number(row[col])) ? Number(row[col]) : undefined
         )
         .filter((v) => typeof v === "number") as number[];
       if (datos.length > 0) {
@@ -271,13 +245,10 @@ export class Inicio implements OnInit {
             i > this.headerRowIndex &&
             this.sheetData &&
             this.sheetData[i] &&
-            !isNaN(Number(String(this.sheetData[i][colA.idx]).replace(',', '.'))) &&
-            !isNaN(Number(String(this.sheetData[i][colB.idx]).replace(',', '.')))
+            !isNaN(Number(this.sheetData[i][colA.idx])) &&
+            !isNaN(Number(this.sheetData[i][colB.idx]))
           ) {
-            pares.push([
-              Number(String(this.sheetData[i][colA.idx]).replace(',', '.')),
-              Number(String(this.sheetData[i][colB.idx]).replace(',', '.'))
-            ]);
+            pares.push([Number(this.sheetData[i][colA.idx]), Number(this.sheetData[i][colB.idx])]);
           }
         }
         const x = pares.map(p => p[0]);
@@ -415,7 +386,7 @@ export class Inicio implements OnInit {
       return;
     }
     const XTY = this.multiplyMatrixVector(XT, Y);
-    const beta = this.multiplyMatrixVector(XTX_inv, XTY); // [intercept, coef_x1, coef_x2, ...]
+    const beta = this.multiplyMatrixVector(XTX_inv, XTY);
     const intercept = beta[0];
     const coefs = beta.slice(1);
 
@@ -424,39 +395,26 @@ export class Inicio implements OnInit {
 
     this.multiRegressionCoef = { intercept, coefs };
 
-    // Chart.js
+    // SCATTER: Y real vs Y predicho
     this.multiRegressionChartData = {
-      labels: validRows.map((_, i) => `Fila ${i + 1}`),
       datasets: [
         {
-          label: "Y real (" + (this.columnOptions[this.yMultivar]?.label ?? "Y") + ")",
-          data: Y,
-          borderColor: "#2fffa5",
-          backgroundColor: "#2fffa588",
-          fill: false,
-          pointRadius: 3,
-          tension: 0.1
-        },
-        {
-          label: "Y predicho (Regresión múltiple)",
-          data: Y_predicho,
-          borderColor: "#ff3c7e",
-          backgroundColor: "#ff3c7e55",
-          fill: false,
-          pointRadius: 3,
-          tension: 0.1
+          label: "Y real vs Y predicho",
+          data: Y.map((yReal, i) => ({ x: yReal, y: Y_predicho[i] })),
+          backgroundColor: "#2fffa5",
+          pointRadius: 4
         }
       ]
     };
 
     this.multiRegressionChartOptions = {
       plugins: {
-        legend: { labels: { color: "#3a3a3a" } },
-        title: { display: true, text: "Regresión lineal múltiple: Y vs X's seleccionadas" }
+        legend: { display: true },
+        title: { display: true, text: "Dispersión: Y real vs Y predicho" }
       },
       scales: {
-        x: { title: { display: true, text: "Fila" }, ticks: { color: "#3a3a3a" } },
-        y: { title: { display: true, text: "Valor" }, ticks: { color: "#3a3a3a" } }
+        x: { title: { display: true, text: "Y real" } },
+        y: { title: { display: true, text: "Y predicho" } }
       }
     };
   }
