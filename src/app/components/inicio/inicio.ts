@@ -395,14 +395,36 @@ export class Inicio implements OnInit {
 
     this.multiRegressionCoef = { intercept, coefs };
 
-    // SCATTER: Y real vs Y predicho
+    // Datos para scatter
+    const scatterData = Y.map((yReal, i) => ({ x: yReal, y: Y_predicho[i] }));
+    // Línea de referencia y = x
+    const minVal = Math.min(...Y, ...Y_predicho);
+    const maxVal = Math.max(...Y, ...Y_predicho);
+    const diagonalLine = [
+      { x: minVal, y: minVal },
+      { x: maxVal, y: maxVal }
+    ];
+
     this.multiRegressionChartData = {
       datasets: [
         {
-          label: "Y real vs Y predicho",
-          data: Y.map((yReal, i) => ({ x: yReal, y: Y_predicho[i] })),
-          backgroundColor: "#2fffa5",
-          pointRadius: 4
+          label: "Valores reales vs predichos",
+          data: scatterData,
+          backgroundColor: "rgba(54, 162, 235, 0.6)", // azul suave
+          pointRadius: 5,
+          type: "scatter",
+          showLine: false
+        },
+        {
+          label: "Referencia (y = x)",
+          data: diagonalLine,
+          borderColor: "#ff4444", // rojo fuerte
+          borderWidth: 2,
+          type: "line",
+          fill: false,
+          pointRadius: 0,
+          tension: 0,
+          showLine: true
         }
       ]
     };
@@ -410,12 +432,19 @@ export class Inicio implements OnInit {
     this.multiRegressionChartOptions = {
       plugins: {
         legend: { display: true },
-        title: { display: true, text: "Dispersión: Y real vs Y predicho" }
+        title: { display: true, text: "Comparación entre valores reales y predichos" }
       },
       scales: {
-        x: { title: { display: true, text: "Y real" } },
-        y: { title: { display: true, text: "Y predicho" } }
-      }
+        x: {
+          title: { display: true, text: "Valor Real" },
+          grid: { color: "#e0e0e0" }
+        },
+        y: {
+          title: { display: true, text: "Valor Predicho" },
+          grid: { color: "#e0e0e0" }
+        }
+      },
+      backgroundColor: '#fff'
     };
   }
 
