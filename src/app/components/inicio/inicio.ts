@@ -147,25 +147,30 @@ export class Inicio implements OnInit {
     this.correlation = this.getCorrelation(x, y);
     const { slope, intercept } = this.linearRegression(x, y);
     this.regression = { slope, intercept };
-    const yReg = x.map(xi => slope * xi + intercept);
+
+    // Para la línea de regresión lineal, usamos dos puntos: el mínimo y máximo de X
+    const minX = Math.min(...x);
+    const maxX = Math.max(...x);
+    const regLine = [
+      { x: minX, y: slope * minX + intercept },
+      { x: maxX, y: slope * maxX + intercept }
+    ];
 
     this.chartData = {
-      labels: x,
       datasets: [
         {
           label: 'Datos',
-          data: y,
-          borderColor: '#2fffa5',
-          backgroundColor: '#2fffa588',
-          type: 'scatter',
-          showLine: false,
-          pointRadius: 5
+          data: x.map((xi, i) => ({ x: xi, y: y[i] })), // <--- SCATTER X Y
+          backgroundColor: 'orange',
+          borderColor: 'orange',
+          pointRadius: 6,
+          type: 'scatter'
         },
         {
-          label: 'Regresión Lineal',
-          data: yReg,
-          borderColor: '#ff3c7e',
-          backgroundColor: '#ff3c7e55',
+          label: 'Regresión lineal',
+          data: regLine,
+          borderColor: 'red',
+          borderWidth: 2,
           type: 'line',
           fill: false,
           pointRadius: 0,
@@ -175,21 +180,38 @@ export class Inicio implements OnInit {
     };
 
     this.chartOptions = {
-      scales: {
-        x: {
-          title: { display: true, text: this.columnOptions[this.colX]?.label ?? 'Columna X' }
-        },
-        y: {
-          title: { display: true, text: this.columnOptions[this.colY]?.label ?? 'Columna Y' }
-        }
-      },
       plugins: {
-        legend: { labels: { color: '#fff' } },
+        legend: {
+          display: true,
+          labels: {
+            color: '#444',
+            font: {
+              size: 16
+            }
+          }
+        },
         title: {
           display: true,
-          text: 'Correlación y Regresión Lineal'
+          text: `Regresión Lineal Simple\n${this.columnOptions[this.colX]?.label ?? 'X'} vs ${this.columnOptions[this.colY]?.label ?? 'Y'}`,
+          font: {
+            size: 22
+          },
+          color: '#444'
         }
-      }
+      },
+      scales: {
+        x: {
+          type: 'linear', // <--- IMPORTANTE
+          title: { display: true, text: this.columnOptions[this.colX]?.label ?? 'Columna X', color: '#444', font: { size: 16 } },
+          grid: { color: "#e0e0e0" }
+        },
+        y: {
+          type: 'linear', // <--- IMPORTANTE
+          title: { display: true, text: this.columnOptions[this.colY]?.label ?? 'Columna Y', color: '#444', font: { size: 16 } },
+          grid: { color: "#e0e0e0" }
+        }
+      },
+      backgroundColor: '#fff'
     };
 
     this.calcularEstadisticas();
