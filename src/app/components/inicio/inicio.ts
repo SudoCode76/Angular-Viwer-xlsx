@@ -192,7 +192,7 @@ export class Inicio implements OnInit {
         },
         title: {
           display: true,
-          text: `Regresión Lineal Simple\n${this.columnOptions[this.colX]?.label ?? 'X'} vs ${this.columnOptions[this.colY]?.label ?? 'Y'}`,
+          text: `Regresión Lineal Simple\n${this.columnOptions[this.colX].label ?? 'X'} vs ${this.columnOptions[this.colY].label ?? 'Y'}`,
           font: {
             size: 22
           },
@@ -202,12 +202,12 @@ export class Inicio implements OnInit {
       scales: {
         x: {
           type: 'linear', // <--- IMPORTANTE
-          title: { display: true, text: this.columnOptions[this.colX]?.label ?? 'Columna X', color: '#444', font: { size: 16 } },
+          title: { display: true, text: this.columnOptions[this.colX].label ?? 'Columna X', color: '#444', font: { size: 16 } },
           grid: { color: "#e0e0e0" }
         },
         y: {
           type: 'linear', // <--- IMPORTANTE
-          title: { display: true, text: this.columnOptions[this.colY]?.label ?? 'Columna Y', color: '#444', font: { size: 16 } },
+          title: { display: true, text: this.columnOptions[this.colY].label ?? 'Columna Y', color: '#444', font: { size: 16 } },
           grid: { color: "#e0e0e0" }
         }
       },
