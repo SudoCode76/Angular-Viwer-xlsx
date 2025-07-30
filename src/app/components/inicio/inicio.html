@@ -154,3 +154,25 @@
     <p style="color:#ff3c7e;">No hay suficientes datos numéricos o X seleccionadas para calcular la regresión múltiple.</p>
   }
 </section>
+
+<!-- SECCIÓN DE LÓGICA DIFUSA (¡modificación aquí!) -->
+
+<section class="fuzzy-logic-section">
+  <h3 style="margin-bottom:1.2rem;color:#5bb3a4;">Lógica Difusa (Trapezoidal)</h3>
+  <div class="selectors" style="margin-bottom:1.2rem;">
+    <label>
+      Columna:
+      <select [(ngModel)]="fuzzyColumn" (change)="onFuzzyColumnChange()">
+        @for (col of columnOptions; track col.value) {
+          <option [value]="col.value">{{ col.label }}</option>
+        }
+      </select>
+    </label>
+  </div>
+  @if (fuzzyChartData) {
+    <p-chart type="line" [data]="fuzzyChartData" [options]="fuzzyChartOptions" style="height:400px;" />
+  }
+  @else {
+    <p style="color:#ff3c7e;">No hay datos suficientes para graficar lógica difusa para la columna seleccionada.</p>
+  }
+</section>

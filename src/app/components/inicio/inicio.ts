@@ -8,6 +8,8 @@ import { ProgressSpinner } from 'primeng/progressspinner';
 import { ChartModule } from 'primeng/chart';
 import { DecimalPipe, NgStyle } from '@angular/common';
 
+import { trapezoidal } from './fuzzy-utils';
+
 @Component({
   selector: 'app-inicio',
   standalone: true,
@@ -17,7 +19,7 @@ import { DecimalPipe, NgStyle } from '@angular/common';
 })
 export class Inicio implements OnInit {
   sheetData: string[][] = [];
-  headerRowIndex = 6;
+  headerRowIndex = 0;
   headerColumns: { name: string, value: number }[] = [];
   loading = false;
 
@@ -40,6 +42,11 @@ export class Inicio implements OnInit {
   multiRegressionChartOptions: any = null;
   multiRegressionCoef: { intercept: number, coefs: number[] } | null = null;
 
+  // --- Lógica Difusa ---
+  fuzzyColumn: number = 2; // PRECIO DE VENTA por defecto
+  fuzzyChartData: any = null;
+  fuzzyChartOptions: any = null;
+
   constructor(private xlsxService: XlsxDataService) {}
 
   ngOnInit() {
@@ -51,6 +58,7 @@ export class Inicio implements OnInit {
     this.yMultivar = this.columnOptions.length > 0 ? this.columnOptions[0].value : null;
     this.xMultivarSeleccionadas = this.columnOptions.length > 2 ? [this.columnOptions[1].value, this.columnOptions[2].value] : [];
     this.prepararGraficoRegresionMultiple();
+    this.prepareFuzzyChart();
   }
 
   onFileSelect(event: any) {
@@ -66,6 +74,7 @@ export class Inicio implements OnInit {
       const json = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false }) as unknown[];
       const parsed = json.map(row => Array.isArray(row) ? row.map(cell => String(cell ?? "")) : []);
       this.sheetData = parsed || [];
+      console.log('Archivo cargado, filas:', this.sheetData.length);
       this.setHeaderColumns();
       this.xlsxService.setSheetData(parsed, file.name);
       this.initColumnOptions();
@@ -74,6 +83,7 @@ export class Inicio implements OnInit {
       this.yMultivar = this.columnOptions.length > 0 ? this.columnOptions[0].value : null;
       this.xMultivarSeleccionadas = this.columnOptions.length > 2 ? [this.columnOptions[1].value, this.columnOptions[2].value] : [];
       this.prepararGraficoRegresionMultiple();
+      this.prepareFuzzyChart();
       this.loading = false;
     };
     reader.onerror = () => {
@@ -88,8 +98,10 @@ export class Inicio implements OnInit {
         name: name || `Col ${idx + 1}`,
         value: idx
       }));
+      console.log('Encabezado:', this.headerColumns);
     } else {
       this.headerColumns = [];
+      console.log('No se detectó encabezado');
     }
   }
 
@@ -101,6 +113,7 @@ export class Inicio implements OnInit {
     this.yMultivar = this.columnOptions.length > 0 ? this.columnOptions[0].value : null;
     this.xMultivarSeleccionadas = this.columnOptions.length > 2 ? [this.columnOptions[1].value, this.columnOptions[2].value] : [];
     this.prepararGraficoRegresionMultiple();
+    this.prepareFuzzyChart();
   }
 
   initColumnOptions() {
@@ -109,6 +122,7 @@ export class Inicio implements OnInit {
       label: name ? String(name) : `Columna ${idx + 1}`,
       value: idx
     }));
+    console.log('Opciones de columna:', this.columnOptions);
     if (this.colX >= this.columnOptions.length) this.colX = 0;
     if (this.colY >= this.columnOptions.length) this.colY = 1;
   }
@@ -512,6 +526,82 @@ export class Inicio implements OnInit {
       }
     }
     return I;
+  }
+
+  // --- Lógica Difusa ---
+  onFuzzyColumnChange() {
+    this.prepareFuzzyChart();
+  }
+
+  prepareFuzzyChart() {
+    // Debug: columna seleccionada
+    console.log('Columna seleccionada para lógica difusa:', this.fuzzyColumn, this.columnOptions[this.fuzzyColumn]?.label);
+
+    let rows = this.sheetData.filter((row, idx) => idx > this.headerRowIndex);
+
+    // Debug: muestra las primeras 10 filas y el valor de la columna
+    rows.slice(0, 10).forEach((row, idx) => {
+      console.log(`Fila ${idx + 1}: Valor columna ${this.fuzzyColumn} = "${row[this.fuzzyColumn]}"`);
+    });
+
+    // Muestra cuántas filas se procesan
+    console.log('Total filas para lógica difusa:', rows.length);
+
+    // Debug: muestra todos los valores que intenta convertir a número
+    const debugValues = rows.map(row => row[this.fuzzyColumn]);
+    console.log('Valores crudos de la columna:', debugValues.slice(0, 30)); // muestra los primeros 30
+
+    const values = rows.map(row => Number(row[this.fuzzyColumn])).filter(v => !isNaN(v));
+    console.log('Datos numéricos encontrados:', values.slice(0, 30), '(total:', values.length, ')');
+
+    if (!values.length) {
+      console.log('No se encontraron datos numéricos para graficar lógica difusa');
+      this.fuzzyChartData = null;
+      return;
+    }
+
+    // Define rangos trapezoidales para bajo, medio, alto
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const range = max - min;
+    const step = range / 100;
+
+    console.log('Min:', min, 'Max:', max, 'Range:', range);
+
+    const bajo = { a: min, b: min, c: min + range * 0.3, d: min + range * 0.5 };
+    const medio = { a: min + range * 0.3, b: min + range * 0.5, c: min + range * 0.7, d: min + range * 0.9 };
+    const alto = { a: min + range * 0.7, b: min + range * 0.9, c: max, d: max };
+
+    const xVals: number[] = [];
+    for (let x = min; x <= max; x += step) xVals.push(x);
+
+    console.log('Cantidad de puntos en X:', xVals.length);
+
+    const bajoY = xVals.map(x => trapezoidal(x, bajo.a, bajo.b, bajo.c, bajo.d));
+    const medioY = xVals.map(x => trapezoidal(x, medio.a, medio.b, medio.c, medio.d));
+    const altoY = xVals.map(x => trapezoidal(x, alto.a, alto.b, alto.c, alto.d));
+
+    this.fuzzyChartData = {
+      labels: xVals,
+      datasets: [
+        { label: 'Bajo', data: bajoY, borderColor: 'blue', backgroundColor: 'rgba(54,162,235,0.2)', fill: false, pointRadius: 0 },
+        { label: 'Medio', data: medioY, borderColor: 'orange', backgroundColor: 'rgba(255,159,64,0.2)', fill: false, pointRadius: 0 },
+        { label: 'Alto', data: altoY, borderColor: 'red', backgroundColor: 'rgba(255,99,132,0.2)', fill: false, pointRadius: 0 }
+      ]
+    };
+
+    this.fuzzyChartOptions = {
+      plugins: {
+        legend: { display: true },
+        title: { display: true, text: `Funciones de membresía trapezoidales (${this.columnOptions[this.fuzzyColumn]?.label})` }
+      },
+      scales: {
+        x: { title: { display: true, text: this.columnOptions[this.fuzzyColumn]?.label } },
+        y: { title: { display: true, text: 'Grado de pertenencia', min: 0, max: 1 } }
+      }
+    };
+
+    console.log('Gráfico de lógica difusa preparado:', this.fuzzyChartData);
   }
 
   protected readonly Math = Math;
